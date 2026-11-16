@@ -1,1 +1,195 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IPS Mobile Slideshow</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      overflow: hidden;
+      background: transparent;
+    }
+
+    .slideshow {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 375 / 469;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.6s ease,
+                  visibility 0.6s ease;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      z-index: 1;
+    }
+
+    .slide a {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .slide img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .dots {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 9px;
+      z-index: 3;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,0,0,.35);
+      background: rgba(255,255,255,.65);
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .dot.active {
+      background: #30574E;
+      border-color: #ffffff;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .slide { transition: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="slideshow" id="slideshow">
+
+  <!-- Banner 1: Yumwoof -->
+  <div class="slide active">
+    <a href="https://yumwoof.com/"
+       target="_blank" rel="noopener noreferrer">
+      <img
+        src="https://static.wixstatic.com/media/a32eb8_7170a41b64a04b8da2f8254be0a3804b~mv2.webp"
+        alt="Yumwoof promotion">
+    </a>
+  </div>
+
+  <!-- Banner 2: IPS Shop -->
+  <div class="slide">
+    <a href="https://shop.independentpetsupply.com/"
+       target="_blank" rel="noopener noreferrer">
+      <img
+        src="https://static.wixstatic.com/media/a32eb8_5a15370fb79d411cb44951b08c796c4b~mv2.webp"
+        alt="Shop Independent Pet Supply">
+    </a>
+  </div>
+
+  <!-- Banner 3: IPS Trade Show -->
+  <div class="slide">
+    <a href="https://www.independentpetsupply.com/trade-show-2027"
+       target="_blank" rel="noopener noreferrer">
+      <img
+        src="https://static.wixstatic.com/media/a32eb8_835d581188254a3dabd71ba9bc73464d~mv2.webp"
+        alt="IPS Trade Show 2027">
+    </a>
+  </div>
+
+  <div class="dots" aria-label="Slideshow navigation">
+    <button class="dot active" aria-label="Banner 1"></button>
+    <button class="dot" aria-label="Banner 2"></button>
+    <button class="dot" aria-label="Banner 3"></button>
+  </div>
+
+</div>
+
+<script>
+  const slideshow = document.getElementById("slideshow");
+  const slides = [...document.querySelectorAll(".slide")];
+  const dots = [...document.querySelectorAll(".dot")];
+  const reducedMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  );
+
+  let current = 0;
+  let timer;
+  let startX = 0;
+
+  function showSlide(index) {
+    current = (index + slides.length) % slides.length;
+
+    slides.forEach((slide, i) => {
+      slide.classList.toggle("active", i === current);
+      slide.setAttribute("aria-hidden", i !== current);
+      slide.querySelector("a").tabIndex =
+        i === current ? 0 : -1;
+      dots[i].classList.toggle("active", i === current);
+      dots[i].setAttribute("aria-current", i === current);
+    });
+  }
+
+  function startTimer() {
+    clearInterval(timer);
+    if (!reducedMotion.matches) {
+      timer = setInterval(() => {
+        showSlide(current + 1);
+      }, 5000);
+    }
+  }
+
+  dots.forEach((dot, i) => {
+    dot.addEventListener("click", () => {
+      showSlide(i);
+      startTimer();
+    });
+  });
+
+  slideshow.addEventListener("touchstart", e => {
+    startX = e.changedTouches[0].screenX;
+  }, { passive: true });
+
+  slideshow.addEventListener("touchend", e => {
+    const distance =
+      e.changedTouches[0].screenX - startX;
+
+    if (Math.abs(distance) > 40) {
+      showSlide(current + (distance < 0 ? 1 : -1));
+      startTimer();
+    }
+  }, { passive: true });
+
+  slideshow.addEventListener("mouseenter", () => {
+    clearInterval(timer);
+  });
+
+  slideshow.addEventListener("mouseleave", startTimer);
+
+  reducedMotion.addEventListener("change", startTimer);
+
+  showSlide(0);
+  startTimer();
+</script>
+
+</body>
+</html>
+
